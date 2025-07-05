@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camera Stream</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        h1, h3 {
+            text-align: center;
+        }
+
+        .instructions {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        #video-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px; 
+            margin: 0 auto 20px auto;
+            border: 1px solid #000;
+            aspect-ratio: 16 / 9; 
+            overflow: hidden; 
+        }
+
+        #video {
+            width: 100%;
+            height: 100%;
+            display: block;
+            object-fit: contain;
+        }
+
+        #canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            cursor: default;
+        }
+
+        .controls {
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .controls button {
+            padding: 10px 15px;
+            cursor: pointer;
+        }
+
+        #stats {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .modal {
+            display: none; 
+            position: fixed; 
+            z-index: 1; 
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%; 
+            overflow: auto; 
+            background-color: rgba(0,0,0,0.4); 
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto; 
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%; 
+            max-width: 400px;
+            border-radius: 8px;
+            position: relative;
+        }
+
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .modal-content input[type="text"] {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .modal-content button {
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Camera Stream - {{ cam_id }}</h1>
+
+        <div class="instructions">
+            <h3>How to create zones:</h3>
+            <ul>
+                <li>Click "Start Drawing" to begin creating a zone</li>
+                <li>Click points on the video to create polygon vertices</li>
+                <li>Press Enter to complete the zone</li>
+                <li>Use Delete/Clear buttons to remove zones</li>
+            </ul>
+            <h3>How to edit zones:</h3>
+            <ul>
+                <li>Click "Edit Zones" to enter edit mode</li>
+                <li>Click and drag any vertex (small red circle) to reshape a zone</li>
+                <li>Click on a zone's label to rename it</li>
+                <li>Click "Stop Editing" to exit edit mode</li>
+            </ul>
+        </div>
+
+        <div id="video-container">
+            <img id="video" src="/video_feed/{{ cam_id }}" alt="Camera Stream">
+            <canvas id="canvas"></canvas>
+        </div>
+
+        <div class="controls">
+            <button id="start">Start Drawing</button>
+            <button id="edit">Edit Zones</button>
+            <button id="delete" class="delete-btn">Delete Last Zone</button>
+            <button id="clear" class="clear-btn">Clear All Zones</button>
+            <button onclick="window.location.href='/'">Back to Home</button>
+        </div>
+
+        <div id="stats">
+            <h3>Statistics:</h3>
+            <div id="stats-content">Loading...</div>
+        </div>
+    </div>
+
+    <!-- Rename Zone Modal -->
+    <div id="renameModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Rename Zone</h2>
+            <input type="text" id="newZoneNameInput" placeholder="Enter new zone name">
+            <button id="saveRenameBtn">Save</button>
+        </div>
+    </div>
+
+    <script>
+        const camId = '{{ cam_id }}';
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const startBtn = document.getElementById('start');
+        const editBtn = document.getElementById('edit');
+        const renameModal = document.getElementById('renameModal');
+        const closeRenameModalBtn = document.querySelector('#renameModal .close-button');
+        const newZoneNameInput = document.getElementById('newZoneNameInput');
+        const saveRenameBtn = document.getElementById('saveRenameBtn');
+
+        let drawing = false; 
+        let editing = false; 
+        let currentPoints = []; 
+        let zones = []; 
+
+        let isDraggingPoint = false;
+        let draggedZoneIndex = null;
+        let draggedPointIndex = null;
+        let selectedZoneForRenameIndex = null;
+
+        function generateUUID() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+
+        function resizeCanvas() {
+            const videoRect = video.getBoundingClientRect();
+            canvas.width = videoRect.width;
+            canvas.height = videoRect.height;
+            redraw(); 
+        }
+
+        video.onload = () => {
+            resizeCanvas();
+            loadZones(); 
+        };
+
+        window.addEventListener('resize', resizeCanvas);
+
+        startBtn.onclick = () => {
+            if (editing) { 
+                editing = false;
+                editBtn.textContent = 'Edit Zones';
+                canvas.style.cursor = 'default';
+                redraw();
+            }
+            if (!drawing) {
+                drawing = true;
+                currentPoints = [];
+                startBtn.disabled = true;
+                startBtn.textContent = 'Drawing... (Press Enter to finish)';
+                canvas.style.cursor = 'crosshair';
+            }
+        };
+
+        editBtn.onclick = () => {
+            drawing = false; 
+            startBtn.disabled = false;
+            startBtn.textContent = 'Start Drawing';
+            currentPoints = []; 
+            
+            editing = !editing; 
+            if (editing) {
+                editBtn.textContent = 'Stop Editing';
+                canvas.style.cursor = 'grab'; 
+            } else {
+                editBtn.textContent = 'Edit Zones';
+                canvas.style.cursor = 'default';
+            }
+            redraw(); 
+        };
+
+        canvas.onmousedown = e => {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+
+            const scaleX = video.naturalWidth / video.clientWidth;
+            const scaleY = video.naturalHeight / video.clientHeight;
+            const scaledMouseX = mouseX * scaleX;
+            const scaledMouseY = mouseY * scaleY;
+
+            if (editing) {
+                for (let i = 0; i < zones.length; i++) {
+                    const zone = zones[i];
+                    for (let j = 0; j < zone.points.length; j++) {
+                        const [pointX, pointY] = zone.points[j];
+                        const dist = Math.sqrt(
+                            Math.pow(scaledMouseX - pointX, 2) +
+                            Math.pow(scaledMouseY - pointY, 2)
+                        );
+                        if (dist < 10 * scaleX) { 
+                            isDraggingPoint = true;
+                            draggedZoneIndex = i;
+                            draggedPointIndex = j;
+                            canvas.style.cursor = 'grabbing';
+                            return; 
+                        }
+                    }
+                }
+            } else if (drawing) {
+                currentPoints.push([scaledMouseX, scaledMouseY]);
+                redraw();
+            }
+        };
+
+        canvas.onmousemove = e => {
+            if (isDraggingPoint) {
+                const rect = canvas.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+
+                const scaleX = video.naturalWidth / video.clientWidth;
+                const scaleY = video.naturalHeight / video.clientHeight;
+
+                zones[draggedZoneIndex].points[draggedPointIndex] = [mouseX * scaleX, mouseY * scaleY];
+                redraw();
+            } else if (editing) {
+                const rect = canvas.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+                const scaleX = video.naturalWidth / video.clientWidth;
+                const scaleY = video.naturalHeight / video.clientHeight;
+                let hoverPoint = false;
+                for (let i = 0; i < zones.length; i++) {
+                    const zone = zones[i];
+                    for (let j = 0; j < zone.points.length; j++) {
+                        const [pointX, pointY] = zone.points[j];
+                        const dist = Math.sqrt(
+                            Math.pow(mouseX - pointX / scaleX, 2) +
+                            Math.pow(mouseY - pointY / scaleY, 2)
+                        );
+                        if (dist < 10) { 
+                            hoverPoint = true;
+                            break;
+                        }
+                    }
+                    if (hoverPoint) break;
+                }
+                canvas.style.cursor = hoverPoint ? 'grab' : 'default';
+            }
+        };
+
+        canvas.onmouseup = () => {
+            if (isDraggingPoint) {
+                isDraggingPoint = false;
+                draggedZoneIndex = null;
+                draggedPointIndex = null;
+                canvas.style.cursor = 'default';
+                saveZones(); 
+            }
+        };
+
+        canvas.ondblclick = e => {
+            if (!editing) return; 
+
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+
+            const scaleX = video.naturalWidth / video.clientWidth;
+            const scaleY = video.naturalHeight / video.clientHeight;
+            const scaledMouseX = mouseX * scaleX;
+            const scaledMouseY = mouseY * scaleY;
+
+            for (let i = 0; i < zones.length; i++) {
+                const zone = zones[i];
+                if (zone.points.length > 0) {
+                    const labelX = zone.points[0][0];
+                    const labelY = zone.points[0][1];
+
+                    const textWidth = ctx.measureText(zone.name).width * scaleX; 
+                    const textHeight = 20 * scaleY; 
+
+                    if (scaledMouseX > labelX && scaledMouseX < labelX + textWidth &&
+                        scaledMouseY > labelY - textHeight && scaledMouseY < labelY) {
+                        
+                        selectedZoneForRenameIndex = i;
+                        newZoneNameInput.value = zone.name;
+                        renameModal.style.display = 'block';
+                        return;
+                    }
+                }
+            }
+        };
+
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Enter' && drawing && currentPoints.length > 2) {
+                zones.push({
+                    id: generateUUID(),
+                    name: `Zone ${zones.length + 1}`, 
+                    points: [...currentPoints]
+                });
+                currentPoints = [];
+                drawing = false;
+                startBtn.disabled = false;
+                startBtn.textContent = 'Start Drawing';
+                canvas.style.cursor = 'default';
+                redraw();
+                saveZones();
+            }
+        });
+
+        document.getElementById('delete').onclick = () => {
+            if (zones.length > 0) {
+                zones.pop();
+                redraw();
+                saveZones();
+            }
+        };
+
+        document.getElementById('clear').onclick = () => {
+            zones = [];
+            currentPoints = [];
+            drawing = false;
+            editing = false;
+            startBtn.disabled = false;
+            startBtn.textContent = 'Start Drawing';
+            editBtn.textContent = 'Edit Zones';
+            canvas.style.cursor = 'default';
+            redraw();
+            saveZones();
+        };
+
+        function redraw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const scaleX = canvas.width / video.naturalWidth;
+            const scaleY = canvas.height / video.naturalHeight;
+
+            zones.forEach((zone, index) => {
+                ctx.strokeStyle = '#00ff00';
+                ctx.lineWidth = 2;
+                ctx.fillStyle = 'rgba(0, 255, 0, 0.1)';
+
+                ctx.beginPath();
+                ctx.moveTo(zone.points[0][0] * scaleX, zone.points[0][1] * scaleY);
+                zone.points.forEach(([x, y]) => ctx.lineTo(x * scaleX, y * scaleY));
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+
+                if (zone.points.length > 0) {
+                    ctx.fillStyle = '#00ff00';
+                    ctx.font = '14px Arial';
+                    ctx.fillText(zone.name, zone.points[0][0] * scaleX + 5, zone.points[0][1] * scaleY - 5);
+                }
+
+                if (editing) {
+                    zone.points.forEach(([x, y]) => {
+                        ctx.fillStyle = '#ff0000';
+                        ctx.beginPath();
+                        ctx.arc(x * scaleX, y * scaleY, 5, 0, 2 * Math.PI); // Larger circles for grabbing
+                        ctx.fill();
+                        ctx.strokeStyle = '#ffffff';
+                        ctx.lineWidth = 1;
+                        ctx.stroke();
+                    });
+                }
+            });
+
+            if (currentPoints.length > 0) {
+                ctx.strokeStyle = '#ff0000';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(currentPoints[0][0] * scaleX, currentPoints[0][1] * scaleY);
+                currentPoints.forEach(([x, y]) => ctx.lineTo(x * scaleX, y * scaleY));
+                ctx.stroke();
+
+                currentPoints.forEach(([x, y]) => {
+                    ctx.fillStyle = '#ff0000';
+                    ctx.beginPath();
+                    ctx.arc(x * scaleX, y * scaleY, 3, 0, 2 * Math.PI);
+                    ctx.fill();
+                });
+            }
+        }
+
+        function saveZones() {
+            fetch(`/save_zones/${camId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ zones: zones }) 
+            }).catch(err => console.error('Error saving zones:', err));
+        }
+
+        function loadZones() {
+            fetch(`/save_zones/${camId}`) 
+                .then(r => r.json())
+                .then(data => {
+                    if (data && data.zones) {
+                        zones = data.zones;
+                        zones.forEach((zone, index) => {
+                            if (!zone.id) zone.id = generateUUID();
+                            if (!zone.name) zone.name = `Zone ${index + 1}`;
+                        });
+                        redraw();
+                    }
+                })
+                .catch(err => console.error('Error loading zones:', err));
+        }
+
+        function updateStats() {
+            fetch(`/stats/${camId}`)
+                .then(r => r.json())
+                .then(data => {
+                    const statsContent = document.getElementById('stats-content');
+                    let statsHtml = '';
+
+                    if (Object.keys(data).length === 0) {
+                        statsHtml = 'No statistics available yet.';
+                    } else {
+                        statsHtml += `<strong>Total Vehicles:</strong> ${data.total_vehicles || 0}<br>`;
+
+                        if (data.vehicle_type_counts && Object.keys(data.vehicle_type_counts).length > 0) {
+                            statsHtml += '<strong>Overall Vehicle Type Counts:</strong><br>';
+                            for (const [type, count] of Object.entries(data.vehicle_type_counts)) {
+                                statsHtml += `- ${type}: ${count}<br>`;
+                            }
+                        } else {
+                            statsHtml += 'No overall vehicle types detected yet.<br>';
+                        }
+
+                        if (data.zone_vehicle_counts && data.zone_vehicle_counts.length > 0) {
+                            statsHtml += '<strong>Zone-Specific Statistics:</strong><br>';
+                            data.zone_vehicle_counts.forEach((zoneStats, index) => {
+                                const zoneName = zones[index] ? zones[index].name : `Zone ${index + 1}`;
+                                const zoneTotalObjects = Object.values(zoneStats).reduce((sum, count) => sum + count, 0);
+                                statsHtml += `<strong>${zoneName} (Total: ${zoneTotalObjects}):</strong><br>`;
+                                if (Object.keys(zoneStats).length > 0) {
+                                    const sortedVehicleTypes = Object.keys(zoneStats).sort();
+                                    sortedVehicleTypes.forEach(type => {
+                                        const count = zoneStats[type];
+                                        statsHtml += `&nbsp;&nbsp;&nbsp;- ${type}: ${count}<br>`;
+                                    });
+                                } else {
+                                    statsHtml += `&nbsp;&nbsp;&nbsp;No objects detected in this zone.<br>`;
+                                }
+                            });
+                        } else {
+                            statsHtml += 'No zone-specific statistics available yet.<br>';
+                        }
+                    }
+                    statsContent.innerHTML = statsHtml;
+                })
+                .catch(err => {
+                    console.error('Error fetching stats:', err);
+                    document.getElementById('stats-content').innerHTML = 'Error loading stats';
+                });
+        }
+
+        closeRenameModalBtn.onclick = () => {
+            renameModal.style.display = 'none';
+        };
+
+        saveRenameBtn.onclick = () => {
+            if (selectedZoneForRenameIndex !== null && newZoneNameInput.value.trim() !== '') {
+                zones[selectedZoneForRenameIndex].name = newZoneNameInput.value.trim();
+                saveZones();
+                redraw();
+                updateStats();
+                renameModal.style.display = 'none';
+            }
+        };
+
+        window.onclick = (event) => {
+            if (event.target == renameModal) {
+                renameModal.style.display = 'none';
+            }
+        };
+
+        setInterval(updateStats, 1000);
+        updateStats(); 
+    </script>
+</body>
+
+</html>

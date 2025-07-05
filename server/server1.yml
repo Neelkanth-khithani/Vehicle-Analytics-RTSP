@@ -1,0 +1,4 @@
+rtspTransports: [tcp]
+paths:
+  camera1:
+    runOnInit: ffmpeg -re -stream_loop -1 -i test1.mp4 -c:v libx264 -preset medium -crf 28 -vf scale=1280:-1 -c:a aac -b:a 128k -f rtsp -rtsp_transport tcp rtsp://localhost:8554/camera1
