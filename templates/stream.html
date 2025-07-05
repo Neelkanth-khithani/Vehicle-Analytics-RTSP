@@ -5,43 +5,105 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Camera Stream</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: sans-serif;
-            margin: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #fafafa;
+            color: #2c3e50;
+            line-height: 1.5;
+        }
+
+        .header {
+            background-color: #ffffff;
+            border-bottom: 1px solid #e1e8ed;
+            padding: 20px 0;
+        }
+
+        .header h3 {
+            text-align: center;
+            font-size: 24px;
+            font-weight: 600;
+            color: #2c3e50;
         }
 
         .container {
-            width: 100%;
-            max-width: 900px;
-            margin-bottom: 20px;
-            border: 1px solid #ccc;
-            padding: 20px;
-            border-radius: 8px;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 10px 20px;
         }
 
-        h1, h3 {
-            text-align: center;
+        .help-section {
+            text-align: left;
+            margin-bottom: 10px;
         }
 
-        .instructions {
-            margin-bottom: 20px;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
+        .help-button {
+            background-color: #34495e;
+            color: #ffffff;
+            border: none;
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            border: 1px solid #2c3e50;
         }
 
-        #video-container {
+        .help-button:hover {
+            background-color: #2c3e50;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 10px;
+            align-items: start;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .controls button {
+            width: 44px;
+            height: 44px;
+            background-color: #ffffff;
+            border: 1px solid #bdc3c7;
+            color: #34495e;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .controls button:hover {
+            background-color: #ecf0f1;
+            border-color: #95a5a6;
+        }
+
+        .controls button:disabled {
+            background-color: #f8f9fa;
+            color: #95a5a6;
+            cursor: not-allowed;
+        }
+
+        .video-container {
             position: relative;
             width: 100%;
-            max-width: 800px; 
-            margin: 0 auto 20px auto;
-            border: 1px solid #000;
-            aspect-ratio: 16 / 9; 
-            overflow: hidden; 
+            max-width: 800px;
+            border: 1px solid #bdc3c7;
+            aspect-ratio: 16 / 9;
+            overflow: hidden;
+            background-color: #000000;
         }
 
         #video {
@@ -60,121 +122,227 @@
             cursor: default;
         }
 
-        .controls {
+        .stats-panel {
+            width: 280px;
+            background-color: #ffffff;
+            border: 1px solid #e1e8ed;
+            padding: 24px;
+        }
+
+        .stats-panel h2 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
             margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .stats-grid {
             display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
+            flex-direction: column;
             gap: 10px;
         }
 
-        .controls button {
-            padding: 10px 15px;
-            cursor: pointer;
+        .stat-card {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            padding: 16px;
+            font-size: 14px;
+            color: #495057;
         }
 
-        #stats {
-            width: 100%;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
+        .stat-card strong {
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .stat-card ul {
+            margin: 8px 0 0 20px;
+            list-style: disc;
+        }
+
+        .stat-card li {
+            margin-bottom: 4px;
         }
 
         .modal {
-            display: none; 
-            position: fixed; 
-            z-index: 1; 
+            display: none;
+            position: fixed;
+            z-index: 1000;
             left: 0;
             top: 0;
             width: 100%;
-            height: 100%; 
-            overflow: auto; 
-            background-color: rgba(0,0,0,0.4); 
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
         }
 
         .modal-content {
-            background-color: #fefefe;
-            margin: 15% auto; 
-            padding: 20px;
-            border: 1px solid #888;
-            width: 80%; 
-            max-width: 400px;
-            border-radius: 8px;
+            background-color: #ffffff;
+            padding: 30px;
+            border: 1px solid #bdc3c7;
+            width: 90%;
+            max-width: 600px;
             position: relative;
+            color: #2c3e50;
         }
 
         .close-button {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 24px;
+            color: #95a5a6;
+            cursor: pointer;
         }
 
-        .close-button:hover,
-        .close-button:focus {
-            color: black;
-            text-decoration: none;
-            cursor: pointer;
+        .close-button:hover {
+            color: #2c3e50;
+        }
+
+        .modal-content h2 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+
+        .modal-content h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #34495e;
+        }
+
+        .modal-content ul {
+            margin-left: 20px;
+            margin-bottom: 20px;
+        }
+
+        .modal-content li {
+            margin-bottom: 8px;
         }
 
         .modal-content input[type="text"] {
-            width: calc(100% - 20px);
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #bdc3c7;
+            font-size: 14px;
+            margin-bottom: 20px;
         }
 
         .modal-content button {
-            padding: 10px 20px;
+            background-color: #34495e;
+            color: #ffffff;
+            border: none;
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: 500;
             cursor: pointer;
+            border: 1px solid #2c3e50;
+        }
+
+        .modal-content button:hover {
+            background-color: #2c3e50;
+        }
+
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .stats-panel {
+                width: 100%;
+                max-width: 800px;
+                margin: 0 auto;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px 15px;
+            }
+
+            .main-content {
+                gap: 15px;
+            }
+
+            .controls {
+                flex-direction: row;
+                justify-content: center;
+                order: 2;
+            }
+
+            .video-container {
+                order: 1;
+            }
+
+            .stats-panel {
+                order: 3;
+            }
         }
     </style>
 </head>
 
 <body>
+    <div class="header">
+        <h3>{{ cam_id }}</h3>
+    </div>
+
     <div class="container">
-        <h1>Camera Stream - {{ cam_id }}</h1>
-
-        <div class="instructions">
-            <h3>How to create zones:</h3>
-            <ul>
-                <li>Click "Start Drawing" to begin creating a zone</li>
-                <li>Click points on the video to create polygon vertices</li>
-                <li>Press Enter to complete the zone</li>
-                <li>Use Delete/Clear buttons to remove zones</li>
-            </ul>
-            <h3>How to edit zones:</h3>
-            <ul>
-                <li>Click "Edit Zones" to enter edit mode</li>
-                <li>Click and drag any vertex (small red circle) to reshape a zone</li>
-                <li>Click on a zone's label to rename it</li>
-                <li>Click "Stop Editing" to exit edit mode</li>
-            </ul>
+        <div class="help-section">
+            <button id="helpBtn" class="help-button">Help?</button>
         </div>
 
-        <div id="video-container">
-            <img id="video" src="/video_feed/{{ cam_id }}" alt="Camera Stream">
-            <canvas id="canvas"></canvas>
-        </div>
+        <div class="main-content">
+            <div class="controls">
+                <button id="start" title="Start Drawing"><i class="fa-solid fa-pencil"></i></button>
+                <button id="edit" title="Edit Zones"><i class="fa-solid fa-pen-to-square"></i></button>
+                <button id="delete" class="delete-btn" title="Delete Last Zone"><i class="fa-solid fa-trash-can"></i></button>
+                <button id="clear" class="clear-btn" title="Clear All Zones"><i class="fa-solid fa-broom"></i></button>
+                <button onclick="window.location.href='/'" title="Back to Home"><i class="fa-solid fa-house"></i></button>
+            </div>
 
-        <div class="controls">
-            <button id="start">Start Drawing</button>
-            <button id="edit">Edit Zones</button>
-            <button id="delete" class="delete-btn">Delete Last Zone</button>
-            <button id="clear" class="clear-btn">Clear All Zones</button>
-            <button onclick="window.location.href='/'">Back to Home</button>
-        </div>
+            <div class="video-container">
+                <img id="video" src="/video_feed/{{ cam_id }}" alt="Camera Stream">
+                <canvas id="canvas"></canvas>
+            </div>
 
-        <div id="stats">
-            <h3>Statistics:</h3>
-            <div id="stats-content">Loading...</div>
+            <div class="stats-panel">
+                <div id="stats-content" class="stats-grid">Loading...</div>
+            </div>
         </div>
     </div>
 
-    <!-- Rename Zone Modal -->
+    <div id="instructionsModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" id="closeInstructionsModalBtn">&times;</span>
+            <h2>How to Use</h2>
+            <div class="instructions-content">
+                <section>
+                    <h3>How to create zones:</h3>
+                    <ul>
+                        <li>Click "Start Drawing" to begin creating a zone</li>
+                        <li>Click points on the video to create polygon vertices</li>
+                        <li>Press Enter to complete the zone</li>
+                        <li>Use Delete/Clear buttons to remove zones</li>
+                    </ul>
+                </section>
+                <section>
+                    <h3>How to edit zones:</h3>
+                    <ul>
+                        <li>Click "Edit Zones" to enter edit mode</li>
+                        <li>Click and drag any vertex (small red circle) to reshape a zone</li>
+                        <li>Click on a zone's label to rename it</li>
+                        <li>Click "Stop Editing" to exit edit mode</li>
+                    </ul>
+                </section>
+            </div>
+        </div>
+    </div>
+
     <div id="renameModal" class="modal">
         <div class="modal-content">
             <span class="close-button">&times;</span>
@@ -195,11 +363,14 @@
         const closeRenameModalBtn = document.querySelector('#renameModal .close-button');
         const newZoneNameInput = document.getElementById('newZoneNameInput');
         const saveRenameBtn = document.getElementById('saveRenameBtn');
+        const helpBtn = document.getElementById('helpBtn');
+        const instructionsModal = document.getElementById('instructionsModal');
+        const closeInstructionsModalBtn = document.getElementById('closeInstructionsModalBtn');
 
-        let drawing = false; 
-        let editing = false; 
-        let currentPoints = []; 
-        let zones = []; 
+        let drawing = false;
+        let editing = false;
+        let currentPoints = [];
+        let zones = [];
 
         let isDraggingPoint = false;
         let draggedZoneIndex = null;
@@ -207,7 +378,7 @@
         let selectedZoneForRenameIndex = null;
 
         function generateUUID() {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
                 var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
                 return v.toString(16);
             });
@@ -217,20 +388,33 @@
             const videoRect = video.getBoundingClientRect();
             canvas.width = videoRect.width;
             canvas.height = videoRect.height;
-            redraw(); 
+            redraw();
         }
 
+        // --- IMPORTANT CHANGE HERE ---
+        // Load zones and start stats updates ONLY after the video image is loaded
         video.onload = () => {
-            resizeCanvas();
-            loadZones(); 
+            console.log('Video stream image loaded.');
+            resizeCanvas(); // Set canvas size based on loaded video
+            loadZones(); // Load existing zones from the server
+            updateStats(); // Fetch initial stats
+            // Start continuous stats updates after video is loaded
+            setInterval(updateStats, 1000);
+        };
+
+        // Handle potential errors during video image loading
+        video.onerror = () => {
+            console.error('Error loading video stream image.');
+            document.getElementById('stats-content').innerHTML = '<div class="stat-card">Error loading video stream.</div>';
         };
 
         window.addEventListener('resize', resizeCanvas);
 
         startBtn.onclick = () => {
-            if (editing) { 
+            if (editing) {
                 editing = false;
-                editBtn.textContent = 'Edit Zones';
+                editBtn.innerHTML = '<i class="fa-solid fa-pen-to-square"></i>';
+                editBtn.title = 'Edit Zones';
                 canvas.style.cursor = 'default';
                 redraw();
             }
@@ -238,26 +422,28 @@
                 drawing = true;
                 currentPoints = [];
                 startBtn.disabled = true;
-                startBtn.textContent = 'Drawing... (Press Enter to finish)';
+                startBtn.title = 'Drawing... (Press Enter to finish)';
                 canvas.style.cursor = 'crosshair';
             }
         };
 
         editBtn.onclick = () => {
-            drawing = false; 
+            drawing = false;
             startBtn.disabled = false;
-            startBtn.textContent = 'Start Drawing';
-            currentPoints = []; 
-            
-            editing = !editing; 
+            startBtn.title = 'Start Drawing';
+            currentPoints = [];
+
+            editing = !editing;
             if (editing) {
-                editBtn.textContent = 'Stop Editing';
-                canvas.style.cursor = 'grab'; 
+                editBtn.innerHTML = '<i class="fa-solid fa-ban"></i>';
+                editBtn.title = 'Stop Editing';
+                canvas.style.cursor = 'grab';
             } else {
-                editBtn.textContent = 'Edit Zones';
+                editBtn.innerHTML = '<i class="fa-solid fa-pen-to-square"></i>';
+                editBtn.title = 'Edit Zones';
                 canvas.style.cursor = 'default';
             }
-            redraw(); 
+            redraw();
         };
 
         canvas.onmousedown = e => {
@@ -279,12 +465,12 @@
                             Math.pow(scaledMouseX - pointX, 2) +
                             Math.pow(scaledMouseY - pointY, 2)
                         );
-                        if (dist < 10 * scaleX) { 
+                        if (dist < 10 * scaleX) {
                             isDraggingPoint = true;
                             draggedZoneIndex = i;
                             draggedPointIndex = j;
                             canvas.style.cursor = 'grabbing';
-                            return; 
+                            return;
                         }
                     }
                 }
@@ -320,7 +506,7 @@
                             Math.pow(mouseX - pointX / scaleX, 2) +
                             Math.pow(mouseY - pointY / scaleY, 2)
                         );
-                        if (dist < 10) { 
+                        if (dist < 10) {
                             hoverPoint = true;
                             break;
                         }
@@ -337,12 +523,12 @@
                 draggedZoneIndex = null;
                 draggedPointIndex = null;
                 canvas.style.cursor = 'default';
-                saveZones(); 
+                saveZones();
             }
         };
 
         canvas.ondblclick = e => {
-            if (!editing) return; 
+            if (!editing) return;
 
             const rect = canvas.getBoundingClientRect();
             const mouseX = e.clientX - rect.left;
@@ -356,36 +542,46 @@
             for (let i = 0; i < zones.length; i++) {
                 const zone = zones[i];
                 if (zone.points.length > 0) {
-                    const labelX = zone.points[0][0];
-                    const labelY = zone.points[0][1];
+                    // Approximate centroid for label click detection
+                    let sumX = 0;
+                    let sumY = 0;
+                    for (const [x, y] of zone.points) {
+                        sumX += x;
+                        sumY += y;
+                    }
+                    const centroidX = sumX / zone.points.length;
+                    const centroidY = sumY / zone.points.length;
 
-                    const textWidth = ctx.measureText(zone.name).width * scaleX; 
-                    const textHeight = 20 * scaleY; 
+                    const displayLabelX = centroidX / scaleX;
+                    const displayLabelY = centroidY / scaleY;
 
-                    if (scaledMouseX > labelX && scaledMouseX < labelX + textWidth &&
-                        scaledMouseY > labelY - textHeight && scaledMouseY < labelY) {
-                        
+                    // This is a rough estimation; actual text width depends on content and font size.
+                    // Adjust these values as needed for better click detection on the label.
+                    const textWidth = ctx.measureText(zone.name).width;
+                    const textHeight = 14; // Approximate font size
+
+                    if (mouseX > displayLabelX && mouseX < displayLabelX + textWidth &&
+                        mouseY > displayLabelY - textHeight && mouseY < displayLabelY + 5) {
                         selectedZoneForRenameIndex = i;
                         newZoneNameInput.value = zone.name;
-                        renameModal.style.display = 'block';
+                        renameModal.style.display = 'flex';
                         return;
                     }
                 }
             }
         };
 
-
         document.addEventListener('keydown', e => {
             if (e.key === 'Enter' && drawing && currentPoints.length > 2) {
                 zones.push({
                     id: generateUUID(),
-                    name: `Zone ${zones.length + 1}`, 
+                    name: `Zone ${zones.length + 1}`,
                     points: [...currentPoints]
                 });
                 currentPoints = [];
                 drawing = false;
                 startBtn.disabled = false;
-                startBtn.textContent = 'Start Drawing';
+                startBtn.title = 'Start Drawing';
                 canvas.style.cursor = 'default';
                 redraw();
                 saveZones();
@@ -406,8 +602,9 @@
             drawing = false;
             editing = false;
             startBtn.disabled = false;
-            startBtn.textContent = 'Start Drawing';
-            editBtn.textContent = 'Edit Zones';
+            startBtn.title = 'Start Drawing';
+            editBtn.innerHTML = '<i class="fa-solid fa-pen-to-square"></i>';
+            editBtn.title = 'Edit Zones';
             canvas.style.cursor = 'default';
             redraw();
             saveZones();
@@ -420,30 +617,42 @@
             const scaleY = canvas.height / video.naturalHeight;
 
             zones.forEach((zone, index) => {
-                ctx.strokeStyle = '#00ff00';
+                ctx.strokeStyle = '#FFFFFF'; // White border
                 ctx.lineWidth = 2;
-                ctx.fillStyle = 'rgba(0, 255, 0, 0.1)';
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.2)'; // Transparent white fill
 
                 ctx.beginPath();
                 ctx.moveTo(zone.points[0][0] * scaleX, zone.points[0][1] * scaleY);
-                zone.points.forEach(([x, y]) => ctx.lineTo(x * scaleX, y * scaleY));
+                for (let i = 1; i < zone.points.length; i++) {
+                    ctx.lineTo(zone.points[i][0] * scaleX, zone.points[i][1] * scaleY);
+                }
                 ctx.closePath();
                 ctx.fill();
                 ctx.stroke();
 
                 if (zone.points.length > 0) {
-                    ctx.fillStyle = '#00ff00';
+                    // Calculate centroid for label placement
+                    let sumX = 0;
+                    let sumY = 0;
+                    for (const [x, y] of zone.points) {
+                        sumX += x;
+                        sumY += y;
+                    }
+                    const centroidX = sumX / zone.points.length;
+                    const centroidY = sumY / zone.points.length;
+
+                    ctx.fillStyle = '#FFFFFF'; // White text
                     ctx.font = '14px Arial';
-                    ctx.fillText(zone.name, zone.points[0][0] * scaleX + 5, zone.points[0][1] * scaleY - 5);
+                    ctx.fillText(zone.name, centroidX * scaleX + 5, centroidY * scaleY - 5);
                 }
 
                 if (editing) {
                     zone.points.forEach(([x, y]) => {
-                        ctx.fillStyle = '#ff0000';
+                        ctx.fillStyle = '#cc0000';
                         ctx.beginPath();
-                        ctx.arc(x * scaleX, y * scaleY, 5, 0, 2 * Math.PI); // Larger circles for grabbing
+                        ctx.arc(x * scaleX, y * scaleY, 5, 0, 2 * Math.PI);
                         ctx.fill();
-                        ctx.strokeStyle = '#ffffff';
+                        ctx.strokeStyle = '#800000';
                         ctx.lineWidth = 1;
                         ctx.stroke();
                     });
@@ -451,7 +660,7 @@
             });
 
             if (currentPoints.length > 0) {
-                ctx.strokeStyle = '#ff0000';
+                ctx.strokeStyle = '#cc0000';
                 ctx.lineWidth = 2;
                 ctx.beginPath();
                 ctx.moveTo(currentPoints[0][0] * scaleX, currentPoints[0][1] * scaleY);
@@ -459,7 +668,7 @@
                 ctx.stroke();
 
                 currentPoints.forEach(([x, y]) => {
-                    ctx.fillStyle = '#ff0000';
+                    ctx.fillStyle = '#cc0000';
                     ctx.beginPath();
                     ctx.arc(x * scaleX, y * scaleY, 3, 0, 2 * Math.PI);
                     ctx.fill();
@@ -471,12 +680,12 @@
             fetch(`/save_zones/${camId}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ zones: zones }) 
+                body: JSON.stringify({ zones: zones })
             }).catch(err => console.error('Error saving zones:', err));
         }
 
         function loadZones() {
-            fetch(`/save_zones/${camId}`) 
+            fetch(`/save_zones/${camId}`)
                 .then(r => r.json())
                 .then(data => {
                     if (data && data.zones) {
@@ -499,44 +708,70 @@
                     let statsHtml = '';
 
                     if (Object.keys(data).length === 0) {
-                        statsHtml = 'No statistics available yet.';
+                        statsHtml = '<div class="stat-card">No statistics available yet.</div>';
                     } else {
-                        statsHtml += `<strong>Total Vehicles:</strong> ${data.total_vehicles || 0}<br>`;
+                        statsHtml += `
+                            <div class="stat-card">
+                                <strong>Total Vehicles:</strong> ${data.total_vehicles || 0}
+                            </div>
+                        `;
 
                         if (data.vehicle_type_counts && Object.keys(data.vehicle_type_counts).length > 0) {
-                            statsHtml += '<strong>Overall Vehicle Type Counts:</strong><br>';
+                            let typeCountsHtml = '<ul>';
                             for (const [type, count] of Object.entries(data.vehicle_type_counts)) {
-                                statsHtml += `- ${type}: ${count}<br>`;
+                                typeCountsHtml += `<li>${type}: ${count}</li>`;
                             }
+                            typeCountsHtml += '</ul>';
+                            statsHtml += `
+                                <div class="stat-card">
+                                    <strong>Overall Vehicle Type Counts:</strong>
+                                    ${typeCountsHtml}
+                                </div>
+                            `;
                         } else {
-                            statsHtml += 'No overall vehicle types detected yet.<br>';
+                            statsHtml += `
+                                <div class="stat-card">
+                                    No overall vehicle types detected yet.
+                                </div>
+                            `;
                         }
 
                         if (data.zone_vehicle_counts && data.zone_vehicle_counts.length > 0) {
-                            statsHtml += '<strong>Zone-Specific Statistics:</strong><br>';
                             data.zone_vehicle_counts.forEach((zoneStats, index) => {
                                 const zoneName = zones[index] ? zones[index].name : `Zone ${index + 1}`;
                                 const zoneTotalObjects = Object.values(zoneStats).reduce((sum, count) => sum + count, 0);
-                                statsHtml += `<strong>${zoneName} (Total: ${zoneTotalObjects}):</strong><br>`;
+                                let zoneStatsDetailHtml = '<ul>';
                                 if (Object.keys(zoneStats).length > 0) {
                                     const sortedVehicleTypes = Object.keys(zoneStats).sort();
                                     sortedVehicleTypes.forEach(type => {
                                         const count = zoneStats[type];
-                                        statsHtml += `&nbsp;&nbsp;&nbsp;- ${type}: ${count}<br>`;
+                                        zoneStatsDetailHtml += `<li>${type}: ${count}</li>`;
                                     });
                                 } else {
-                                    statsHtml += `&nbsp;&nbsp;&nbsp;No objects detected in this zone.<br>`;
+                                    zoneStatsDetailHtml += `<li>No objects detected in this zone.</li>`;
                                 }
+                                zoneStatsDetailHtml += '</ul>';
+
+                                statsHtml += `
+                                    <div class="stat-card">
+                                        <strong>${zoneName} (Total: ${zoneTotalObjects}):</strong>
+                                        ${zoneStatsDetailHtml}
+                                    </div>
+                                `;
                             });
                         } else {
-                            statsHtml += 'No zone-specific statistics available yet.<br>';
+                            statsHtml += `
+                                <div class="stat-card">
+                                    No zone-specific statistics available yet.
+                                </div>
+                            `;
                         }
                     }
                     statsContent.innerHTML = statsHtml;
                 })
                 .catch(err => {
                     console.error('Error fetching stats:', err);
-                    document.getElementById('stats-content').innerHTML = 'Error loading stats';
+                    document.getElementById('stats-content').innerHTML = '<div class="stat-card">Error loading stats</div>';
                 });
         }
 
@@ -554,14 +789,25 @@
             }
         };
 
+        helpBtn.onclick = () => {
+            instructionsModal.style.display = 'flex';
+        };
+
+        closeInstructionsModalBtn.onclick = () => {
+            instructionsModal.style.display = 'none';
+        };
+
         window.onclick = (event) => {
             if (event.target == renameModal) {
                 renameModal.style.display = 'none';
             }
+            if (event.target == instructionsModal) {
+                instructionsModal.style.display = 'none';
+            }
         };
 
-        setInterval(updateStats, 1000);
-        updateStats(); 
+        // Removed the initial updateStats() call and setInterval from here.
+        // They are now called inside video.onload.
     </script>
 </body>
 
