@@ -6,289 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Camera Stream</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: #fafafa;
-            color: #2c3e50;
-            line-height: 1.5;
-        }
-
-        .header {
-            background-color: #ffffff;
-            border-bottom: 1px solid #e1e8ed;
-            padding: 20px 0;
-        }
-
-        .header h3 {
-            text-align: center;
-            font-size: 24px;
-            font-weight: 600;
-            color: #2c3e50;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 10px 20px;
-        }
-
-        .help-section {
-            text-align: left;
-            margin-bottom: 10px;
-        }
-
-        .help-button {
-            background-color: #34495e;
-            color: #ffffff;
-            border: none;
-            padding: 12px 24px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            border: 1px solid #2c3e50;
-        }
-
-        .help-button:hover {
-            background-color: #2c3e50;
-        }
-
-        .main-content {
-            display: grid;
-            grid-template-columns: auto 1fr auto;
-            gap: 10px;
-            align-items: start;
-        }
-
-        .controls {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .controls button {
-            width: 44px;
-            height: 44px;
-            background-color: #ffffff;
-            border: 1px solid #bdc3c7;
-            color: #34495e;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-        }
-
-        .controls button:hover {
-            background-color: #ecf0f1;
-            border-color: #95a5a6;
-        }
-
-        .controls button:disabled {
-            background-color: #f8f9fa;
-            color: #95a5a6;
-            cursor: not-allowed;
-        }
-
-        .video-container {
-            position: relative;
-            width: 100%;
-            max-width: 800px;
-            border: 1px solid #bdc3c7;
-            aspect-ratio: 16 / 9;
-            overflow: hidden;
-            background-color: #000000;
-        }
-
-        #video {
-            width: 100%;
-            height: 100%;
-            display: block;
-            object-fit: contain;
-        }
-
-        #canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            cursor: default;
-        }
-
-        .stats-panel {
-            width: 280px;
-            background-color: #ffffff;
-            border: 1px solid #e1e8ed;
-            padding: 24px;
-        }
-
-        .stats-panel h2 {
-            font-size: 18px;
-            font-weight: 600;
-            color: #2c3e50;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .stats-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .stat-card {
-            background-color: #f8f9fa;
-            border: 1px solid #e9ecef;
-            padding: 16px;
-            font-size: 14px;
-            color: #495057;
-        }
-
-        .stat-card strong {
-            color: #2c3e50;
-            font-weight: 600;
-        }
-
-        .stat-card ul {
-            margin: 8px 0 0 20px;
-            list-style: disc;
-        }
-
-        .stat-card li {
-            margin-bottom: 4px;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            justify-content: center;
-            align-items: center;
-        }
-
-        .modal-content {
-            background-color: #ffffff;
-            padding: 30px;
-            border: 1px solid #bdc3c7;
-            width: 90%;
-            max-width: 600px;
-            position: relative;
-            color: #2c3e50;
-        }
-
-        .close-button {
-            position: absolute;
-            top: 15px;
-            right: 20px;
-            font-size: 24px;
-            color: #95a5a6;
-            cursor: pointer;
-        }
-
-        .close-button:hover {
-            color: #2c3e50;
-        }
-
-        .modal-content h2 {
-            font-size: 20px;
-            font-weight: 600;
-            margin-bottom: 20px;
-            color: #2c3e50;
-        }
-
-        .modal-content h3 {
-            font-size: 16px;
-            font-weight: 600;
-            margin-bottom: 12px;
-            color: #34495e;
-        }
-
-        .modal-content ul {
-            margin-left: 20px;
-            margin-bottom: 20px;
-        }
-
-        .modal-content li {
-            margin-bottom: 8px;
-        }
-
-        .modal-content input[type="text"] {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #bdc3c7;
-            font-size: 14px;
-            margin-bottom: 20px;
-        }
-
-        .modal-content button {
-            background-color: #34495e;
-            color: #ffffff;
-            border: none;
-            padding: 12px 24px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            border: 1px solid #2c3e50;
-        }
-
-        .modal-content button:hover {
-            background-color: #2c3e50;
-        }
-
-        @media (max-width: 1200px) {
-            .main-content {
-                grid-template-columns: 1fr;
-                gap: 20px;
-            }
-
-            .stats-panel {
-                width: 100%;
-                max-width: 800px;
-                margin: 0 auto;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                padding: 20px 15px;
-            }
-
-            .main-content {
-                gap: 15px;
-            }
-
-            .controls {
-                flex-direction: row;
-                justify-content: center;
-                order: 2;
-            }
-
-            .video-container {
-                order: 1;
-            }
-
-            .stats-panel {
-                order: 3;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="../static/css/stream.css">
 </head>
 
 <body>
     <div class="header">
-        <h3>{{ cam_id }}</h3>
+        <h5>CAMERA {{ cam_id }}</h5>
     </div>
 
     <div class="container">
@@ -300,13 +23,19 @@
             <div class="controls">
                 <button id="start" title="Start Drawing"><i class="fa-solid fa-pencil"></i></button>
                 <button id="edit" title="Edit Zones"><i class="fa-solid fa-pen-to-square"></i></button>
-                <button id="delete" class="delete-btn" title="Delete Last Zone"><i class="fa-solid fa-trash-can"></i></button>
+                <button id="delete" class="delete-btn" title="Delete Last Zone"><i
+                        class="fa-solid fa-trash-can"></i></button>
                 <button id="clear" class="clear-btn" title="Clear All Zones"><i class="fa-solid fa-broom"></i></button>
-                <button onclick="window.location.href='/'" title="Back to Home"><i class="fa-solid fa-house"></i></button>
+                <button onclick="window.location.href='/'" title="Back to Home"><i
+                        class="fa-solid fa-house"></i></button>
             </div>
 
             <div class="video-container">
-                <img id="video" src="/video_feed/{{ cam_id }}" alt="Camera Stream">
+                <div id="loadingOverlay" class="loading-overlay">
+                    <div class="spinner"></div>
+                    <div>Loading Stream...</div>
+                </div>
+                <img id="video" src="/video_feed/{{ cam_id }}" alt="Camera Stream" style="display: none;">
                 <canvas id="canvas"></canvas>
             </div>
 
@@ -366,6 +95,7 @@
         const helpBtn = document.getElementById('helpBtn');
         const instructionsModal = document.getElementById('instructionsModal');
         const closeInstructionsModalBtn = document.getElementById('closeInstructionsModalBtn');
+        const loadingOverlay = document.getElementById('loadingOverlay');
 
         let drawing = false;
         let editing = false;
@@ -376,7 +106,12 @@
         let draggedZoneIndex = null;
         let draggedPointIndex = null;
         let selectedZoneForRenameIndex = null;
+        let statsIntervalId = null;
 
+        /**
+         * Generates a unique identifier (UUID) using a standard format.
+         * This function creates a version 4 UUID, which is based on random numbers.
+         */
         function generateUUID() {
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
                 var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
@@ -384,6 +119,10 @@
             });
         }
 
+        /**
+         * Resizes the canvas element to match the dimensions of the video stream.
+         * After resizing, it triggers a redraw of all elements on the canvas.
+         */
         function resizeCanvas() {
             const videoRect = video.getBoundingClientRect();
             canvas.width = videoRect.width;
@@ -391,25 +130,86 @@
             redraw();
         }
 
-        // --- IMPORTANT CHANGE HERE ---
-        // Load zones and start stats updates ONLY after the video image is loaded
-        video.onload = () => {
-            console.log('Video stream image loaded.');
-            resizeCanvas(); // Set canvas size based on loaded video
-            loadZones(); // Load existing zones from the server
-            updateStats(); // Fetch initial stats
-            // Start continuous stats updates after video is loaded
-            setInterval(updateStats, 1000);
-        };
+        /**
+         * Initializes the video stream and associated data. This involves displaying a loading overlay,
+         * setting the video source with a cache-buster, and defining onload and onerror handlers.
+         * Upon successful video load, it hides the loading overlay, shows the video, resizes the canvas,
+         * loads existing zones, and starts fetching real-time statistics. In case of an error, it displays
+         * an error message and attempts to re-initialize the stream after a delay.
+         */
+        function initializeStream() {
+            console.log('Initializing stream...');
+            loadingOverlay.style.display = 'flex';
+            video.style.display = 'none';
 
-        // Handle potential errors during video image loading
-        video.onerror = () => {
-            console.error('Error loading video stream image.');
-            document.getElementById('stats-content').innerHTML = '<div class="stat-card">Error loading video stream.</div>';
-        };
+            video.src = `/video_feed/${camId}?_=${new Date().getTime()}`;
 
+            video.onload = null;
+            video.onerror = null;
+
+            video.onload = () => {
+                console.log('Video stream image loaded.');
+                setTimeout(() => {
+                    loadingOverlay.style.display = 'none';
+                    video.style.display = 'block';
+                    resizeCanvas();
+                    loadZones();
+                    updateStats();
+
+                    if (statsIntervalId) {
+                        clearInterval(statsIntervalId);
+                    }
+                    statsIntervalId = setInterval(updateStats, 1000);
+                }, 1500);
+            };
+
+            video.onerror = () => {
+                console.error('Error loading video stream image. Retrying in 3 seconds...');
+                document.getElementById('stats-content').innerHTML = '<div class="stat-card">Error loading video stream. Retrying...</div>';
+                loadingOverlay.innerHTML = '<div style="color:red;">Error loading stream. Retrying...</div><div class="spinner"></div>';
+                setTimeout(() => {
+                    initializeStream();
+                }, 3000);
+            };
+        }
+
+        window.addEventListener('load', initializeStream);
         window.addEventListener('resize', resizeCanvas);
 
+        /**
+         * Handles the `pageshow` event, which fires when a session history entry is being activated.
+         * If the page is restored from the back/forward cache, it clears any existing statistics intervals
+         * and re-initializes the video stream to ensure fresh data and a responsive UI.
+         */
+        window.addEventListener('pageshow', function (event) {
+            if (event.persisted) {
+                console.log('Page restored from Back/Forward Cache. Re-initializing stream.');
+                if (statsIntervalId) {
+                    clearInterval(statsIntervalId);
+                    statsIntervalId = null;
+                }
+                initializeStream();
+            }
+        });
+
+        /**
+         * Handles the `pagehide` event, which fires when a user navigates away from the page.
+         * This function is crucial for resource cleanup, specifically clearing the interval
+         * that continuously updates statistics to prevent memory leaks and unnecessary background processes.
+         */
+        window.addEventListener('pagehide', function (event) {
+            if (statsIntervalId) {
+                clearInterval(statsIntervalId);
+                statsIntervalId = null;
+                console.log('Stats interval cleared on pagehide.');
+            }
+        });
+
+        /**
+         * Toggles the drawing mode. When drawing is enabled, it disables the start button,
+         * sets the canvas cursor to 'crosshair', and clears any existing points. If editing
+         * mode is active, it first disables editing mode before enabling drawing.
+         */
         startBtn.onclick = () => {
             if (editing) {
                 editing = false;
@@ -427,6 +227,11 @@
             }
         };
 
+        /**
+         * Toggles the editing mode for zones. When activated, it disables drawing,
+         * changes the edit button icon and title, and sets the canvas cursor to 'grab'.
+         * When deactivated, it reverts these changes and redraws the canvas.
+         */
         editBtn.onclick = () => {
             drawing = false;
             startBtn.disabled = false;
@@ -446,6 +251,11 @@
             redraw();
         };
 
+        /**
+         * Handles the `mousedown` event on the canvas. If in editing mode, it checks if a user
+         * clicked near a zone vertex and enables dragging if a vertex is found.
+         * If in drawing mode, it adds the current mouse position as a new point to the current zone.
+         */
         canvas.onmousedown = e => {
             const rect = canvas.getBoundingClientRect();
             const mouseX = e.clientX - rect.left;
@@ -480,6 +290,11 @@
             }
         };
 
+        /**
+         * Handles the `mousemove` event on the canvas. If a point is being dragged in editing mode,
+         * it updates the position of the dragged point within the current zone and redraws the canvas.
+         * If in editing mode and not dragging, it adjusts the cursor to 'grab' if hovering over a zone vertex.
+         */
         canvas.onmousemove = e => {
             if (isDraggingPoint) {
                 const rect = canvas.getBoundingClientRect();
@@ -517,6 +332,10 @@
             }
         };
 
+        /**
+         * Handles the `mouseup` event on the canvas. If a point was being dragged,
+         * it resets the dragging state and saves the updated zone configurations to the server.
+         */
         canvas.onmouseup = () => {
             if (isDraggingPoint) {
                 isDraggingPoint = false;
@@ -527,6 +346,12 @@
             }
         };
 
+        /**
+         * Handles the `dblclick` event on the canvas. If in editing mode,
+         * it checks if the double-click occurred within a zone's label area.
+         * If a label is detected, it opens a modal to allow renaming the zone,
+         * pre-populating the input field with the current zone name.
+         */
         canvas.ondblclick = e => {
             if (!editing) return;
 
@@ -542,7 +367,6 @@
             for (let i = 0; i < zones.length; i++) {
                 const zone = zones[i];
                 if (zone.points.length > 0) {
-                    // Approximate centroid for label click detection
                     let sumX = 0;
                     let sumY = 0;
                     for (const [x, y] of zone.points) {
@@ -555,10 +379,8 @@
                     const displayLabelX = centroidX / scaleX;
                     const displayLabelY = centroidY / scaleY;
 
-                    // This is a rough estimation; actual text width depends on content and font size.
-                    // Adjust these values as needed for better click detection on the label.
                     const textWidth = ctx.measureText(zone.name).width;
-                    const textHeight = 14; // Approximate font size
+                    const textHeight = 14;
 
                     if (mouseX > displayLabelX && mouseX < displayLabelX + textWidth &&
                         mouseY > displayLabelY - textHeight && mouseY < displayLabelY + 5) {
@@ -571,6 +393,12 @@
             }
         };
 
+        /**
+         * Handles keyboard `keydown` events. When the 'Enter' key is pressed
+         * while drawing and at least three points have been defined, it completes
+         * the current zone, adds it to the list of zones, resets the drawing state,
+         * and saves the updated zones to the server.
+         */
         document.addEventListener('keydown', e => {
             if (e.key === 'Enter' && drawing && currentPoints.length > 2) {
                 zones.push({
@@ -588,6 +416,11 @@
             }
         });
 
+        /**
+         * Handles the click event for the delete button. When clicked, it removes
+         * the last drawn zone from the `zones` array, redraws the canvas, and
+         * saves the updated zone configuration to the server.
+         */
         document.getElementById('delete').onclick = () => {
             if (zones.length > 0) {
                 zones.pop();
@@ -596,6 +429,12 @@
             }
         };
 
+        /**
+         * Handles the click event for the clear button. When clicked, it clears
+         * all existing zones, resets the drawing and editing states, restores
+         * button texts and titles, sets the canvas cursor to default, redraws the canvas,
+         * and saves the empty zone configuration to the server.
+         */
         document.getElementById('clear').onclick = () => {
             zones = [];
             currentPoints = [];
@@ -610,6 +449,14 @@
             saveZones();
         };
 
+        /**
+         * Redraws all zones and currently drawn points on the canvas.
+         * It clears the canvas, then iterates through each defined zone,
+         * drawing its outline, filling it with a transparent color, and
+         * displaying its name. In editing mode, it also draws red circles
+         * at each vertex to indicate editability. If the user is currently
+         * drawing a new zone, it draws the partial polygon and its vertices.
+         */
         function redraw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -617,9 +464,9 @@
             const scaleY = canvas.height / video.naturalHeight;
 
             zones.forEach((zone, index) => {
-                ctx.strokeStyle = '#FFFFFF'; // White border
+                ctx.strokeStyle = '#FFFFFF';
                 ctx.lineWidth = 2;
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.2)'; // Transparent white fill
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
 
                 ctx.beginPath();
                 ctx.moveTo(zone.points[0][0] * scaleX, zone.points[0][1] * scaleY);
@@ -631,7 +478,6 @@
                 ctx.stroke();
 
                 if (zone.points.length > 0) {
-                    // Calculate centroid for label placement
                     let sumX = 0;
                     let sumY = 0;
                     for (const [x, y] of zone.points) {
@@ -641,7 +487,7 @@
                     const centroidX = sumX / zone.points.length;
                     const centroidY = sumY / zone.points.length;
 
-                    ctx.fillStyle = '#FFFFFF'; // White text
+                    ctx.fillStyle = '#FFFFFF';
                     ctx.font = '14px Arial';
                     ctx.fillText(zone.name, centroidX * scaleX + 5, centroidY * scaleY - 5);
                 }
@@ -676,6 +522,11 @@
             }
         }
 
+        /**
+         * Saves the current configuration of zones to the server.
+         * It sends a POST request with the zones data as a JSON payload.
+         * Errors during the fetch operation are logged to the console.
+         */
         function saveZones() {
             fetch(`/save_zones/${camId}`, {
                 method: 'POST',
@@ -684,6 +535,13 @@
             }).catch(err => console.error('Error saving zones:', err));
         }
 
+        /**
+         * Loads existing zone configurations from the server.
+         * It sends a GET request to retrieve the zones data, then updates the
+         * local `zones` array and ensures each zone has a unique ID and a default name
+         * if not already defined. Finally, it redraws the canvas to display the loaded zones.
+         * Errors during the fetch operation are logged to the console.
+         */
         function loadZones() {
             fetch(`/save_zones/${camId}`)
                 .then(r => r.json())
@@ -700,6 +558,13 @@
                 .catch(err => console.error('Error loading zones:', err));
         }
 
+        /**
+         * Fetches and updates real-time statistics from the server.
+         * It sends a GET request to the statistics endpoint and dynamically
+         * populates the 'stats-content' div with the received data, including
+         * overall vehicle counts and zone-specific vehicle type counts.
+         * If no statistics are available or an error occurs, appropriate messages are displayed.
+         */
         function updateStats() {
             fetch(`/stats/${camId}`)
                 .then(r => r.json())
@@ -711,10 +576,10 @@
                         statsHtml = '<div class="stat-card">No statistics available yet.</div>';
                     } else {
                         statsHtml += `
-                            <div class="stat-card">
-                                <strong>Total Vehicles:</strong> ${data.total_vehicles || 0}
-                            </div>
-                        `;
+                                <div class="stat-card">
+                                    <strong>Total Vehicles </strong> ${data.total_vehicles || 0}
+                                </div>
+                            `;
 
                         if (data.vehicle_type_counts && Object.keys(data.vehicle_type_counts).length > 0) {
                             let typeCountsHtml = '<ul>';
@@ -753,10 +618,10 @@
                                 zoneStatsDetailHtml += '</ul>';
 
                                 statsHtml += `
-                                    <div class="stat-card">
-                                        <strong>${zoneName} (Total: ${zoneTotalObjects}):</strong>
-                                        ${zoneStatsDetailHtml}
-                                    </div>
+                                <div class="stat-card">
+                                    <strong>${zoneName} (Total: ${zoneTotalObjects}):</strong>
+                                    ${zoneStatsDetailHtml}
+                                </div>
                                 `;
                             });
                         } else {
@@ -775,10 +640,20 @@
                 });
         }
 
+        /**
+         * Closes the zone renaming modal when the close button is clicked.
+         */
         closeRenameModalBtn.onclick = () => {
             renameModal.style.display = 'none';
         };
 
+        /**
+         * Saves the new name for a selected zone. It updates the zone's name in the
+         * `zones` array, saves the updated zones to the server, redraws the canvas
+         * to reflect the name change, updates the statistics display, and then closes
+         * the rename modal. The action proceeds only if a zone is selected and a
+         * non-empty name is provided.
+         */
         saveRenameBtn.onclick = () => {
             if (selectedZoneForRenameIndex !== null && newZoneNameInput.value.trim() !== '') {
                 zones[selectedZoneForRenameIndex].name = newZoneNameInput.value.trim();
@@ -789,14 +664,24 @@
             }
         };
 
+        /**
+         * Displays the instructions modal when the help button is clicked.
+         */
         helpBtn.onclick = () => {
             instructionsModal.style.display = 'flex';
         };
 
+        /**
+         * Closes the instructions modal when its close button is clicked.
+         */
         closeInstructionsModalBtn.onclick = () => {
             instructionsModal.style.display = 'none';
         };
 
+        /**
+         * Handles click events on the window. If the click target is the rename modal
+         * or the instructions modal backdrop, it closes the respective modal.
+         */
         window.onclick = (event) => {
             if (event.target == renameModal) {
                 renameModal.style.display = 'none';
@@ -805,9 +690,6 @@
                 instructionsModal.style.display = 'none';
             }
         };
-
-        // Removed the initial updateStats() call and setInterval from here.
-        // They are now called inside video.onload.
     </script>
 </body>
 
