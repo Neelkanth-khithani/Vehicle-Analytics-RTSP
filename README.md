@@ -1,35 +1,30 @@
 # RTSP Stream-based Vehicle Detection and Zone Analytics
 
-This project provides a robust and user-friendly web application for monitoring RTSP (Real-Time Streaming Protocol) camera streams, performing real-time object detection (specifically vehicles) using YOLOv8, and analyzing object presence within user-defined zones. Built with Flask, it offers a secure login system, camera management, live video streaming, and interactive zone drawing capabilities.
+This project provides web application for monitoring RTSP (Real-Time Streaming Protocol) camera streams, performing real-time object detection (specifically vehicles) using YOLOv8, and analyzing object presence within user-defined zones. Built with Flask, it offers a secure login system, camera management, live video streaming, and interactive zone drawing capabilities.
 
----
-
-## 📌 Table of Contents
-
-* [📌 Project Overview and Structure](#project-overview-and-structure)
-    * [Core Files and Directories:](#core-files-and-directories)
-    * [`routes/` - Defining Application Endpoints](#routes---defining-application-endpoints)
-    * [`services/` - Core Logic and External Interactions](#services---core-logic-and-external-interactions)
-    * [`static/` - Web Assets](#static---web-assets)
-    * [`templates/` - HTML Templates](#templates---html-templates)
-    * [`utils/` - Utility Functions](#utils---utility-functions)
-* [📌 How the Entire Project Works: A Technical Cookbook](#how-the-entire-project-works-a-technical-cookbook)
-    * [1. Application Initialization (`app.py`)](#1-application-initialization-apppy)
-    * [2. User Authentication (`auth_routes.py`)](#2-user-authentication-auth_routespy)
-    * [3. Camera Management (`camera_routes.py` and `index.html`)](#3-camera-management-camera_routespy-and-indexhtml)
-    * [4. Live Stream and Object Detection (`stream_routes.py`, `stream.html`, `detect.py`)](#4-live-stream-and-object-detection-stream_routespy-streamhtml-detectpy)
-    * [5. Utilities (`utils/` Files)](#5-utilities-utils-files)
-* [📌 Getting Started](#getting-started)
+## Table of Contents
+* [Project Overview and Structure](#rtsp-stream-based-vehicle-detection-and-zone-analytics)
+    * [Core Files and Directories](#core-files-and-directories)
+    * [Routes](#routes)
+    * [Services](#services)
+    * [Static Web Assets](#static-web-assets)
+    * [HTML Templates](#html-templates)
+    * [Utility Functions](#utility-functions)
+* [How the Entire Project Works](#how-the-entire-project-works)
+    * [Application Initialization](#application-initialization)
+    * [User Authentication](#user-authentication)
+    * [Camera Management](#camera-management)
+    * [Live Stream and Object Detection](#live-stream-and-object-detection)
+    * [Utilities](#utilities)
+* [Getting Started](#getting-started)
     * [Prerequisites](#prerequisites)
     * [Installation](#installation)
     * [Running the Application](#running-the-application)
-* [📌 Test RTSP Server Setup](#test-rtsp-server-setup)
-    * [1. How to Run the Test RTSP Server](#1-how-to-run-the-test-rtsp-server)
-    * [2. How to Finetune the Test RTSP Server](#2-how-to-finetune-the-test-rtsp-server)
+* [Test RTSP Server Setup](#test-rtsp-server-setup)
+    * [How to Run the Test RTSP Server](#how-to-run-the-test-rtsp-server)
+    * [How to Finetune the Test RTSP Server](#how-to-finetune-the-test-rtsp-server)
 
----
-
-## 📌 Project Structure
+## Project Structure
 ```
 .
 ├── app.py
@@ -64,9 +59,10 @@ This project provides a robust and user-friendly web application for monitoring 
 
 ---
 
-## 📌 Core Files and Directories:
+## Core Files and Directories
 
-### `routes/` - Defining Application Endpoints
+### Routes
+#### Defining Application Endpoints
 
 - **`routes/auth_routes.py`**
   Handles user authentication (login, registration, logout).
@@ -99,7 +95,8 @@ This project provides a robust and user-friendly web application for monitoring 
 | `/stream/<cam_id>` | GET | Renders `stream.html`. Validates session and initializes a `VideoCamera` instance if not already active. |
 | `/video_feed/<cam_id>` | GET | Streams MJPEG video using Flask response. Frames are fetched from the active `VideoCamera` object. |
 
-### `services/` — Core Logic and External Interactions
+### Services
+#### Core Logic and External Interactions
 
 Encapsulates business logic, live stream management, and integration with the YOLOv8 detection model.
 
@@ -119,7 +116,8 @@ Encapsulates business logic, live stream management, and integration with the YO
 
 </details>
 
-### `static/` — Web Assets
+### Static Web Assets
+#### Web Assets
 
 Contains static resources (CSS) served directly to the client browser.
 
@@ -130,7 +128,8 @@ Contains static resources (CSS) served directly to the client browser.
 | `static/css/register.css` | Styling for the user registration page. |
 | `static/css/stream.css` | Layout and UI styling for the camera stream page (`stream.html`). |
 
-### `templates/` — HTML Templates
+### HTML Templates
+#### HTML Templates
 
 Holds [Jinja2](https://jinja.palletsprojects.com/) templates rendered by Flask to generate dynamic pages.
 
@@ -141,7 +140,8 @@ Holds [Jinja2](https://jinja.palletsprojects.com/) templates rendered by Flask t
 | `register.html` | User registration form with input validation and error messaging. |
 | `stream.html` | Live stream view with zone management UI. Integrates canvas drawing for zone creation, JavaScript logic for real-time detection stats, and stream playback tied to `VideoCamera` instances. |
 
-### `utils/` — Utility Functions
+### Utility Functions
+#### Utility Functions
 
 Contains reusable helper functions for user management, camera configuration, and zone detection logic.
 
@@ -165,20 +165,16 @@ Contains reusable helper functions for user management, camera configuration, an
 | `save_zones(zones_file, zones)` | Writes zone definitions to a JSON file. |
 | `check_point_in_zones(point, zones_polygons_only)` | Returns `True` if a given point lies inside any of the defined polygonal zones. Uses a ray casting algorithm. |
 
----
+## How the Entire Project Works
 
-## 📌 How the Entire Project Works: A Technical Cookbook
-
-### 1. Application Initialization (`app.py`)
-
-The journey begins with `app.py`. When you run this file, it:
+### Application Initialization
+It begins with `app.py`. When you run this file, it:
 
 - Initializes the Flask web application instance.
 - Sets a `secret_key` for secure session management (used for login state).
 - Registers the `auth_bp`, `camera_bp`, and `stream_bp` blueprints, which link route handlers across modules into the app.
 
-### 2. User Authentication (`auth_routes.py`)
-
+### User Authentication
 - **Accessing the Application**
   Users start by visiting the root URL (`http://localhost:5000/`). If not authenticated, they are redirected to `/login` by the route handler in `camera_routes.py`.
 
@@ -197,8 +193,7 @@ The journey begins with `app.py`. When you run this file, it:
     - If not, adds user via `save_users()`
     - Prompts the user to log in
 
-### 3. Camera Management (`camera_routes.py`, `index.html`)
-
+### Camera Management
 - **Dashboard Display**
   - After login, users land on the dashboard (`/`), handled by `index()` in `camera_routes.py`
   - It calls `get_user_cameras(username)` to fetch the user's camera list from `data/cameras.json`
@@ -221,8 +216,7 @@ The journey begins with `app.py`. When you run this file, it:
       - `data/zones_<cam_id>.json`
       - `data/stats_<cam_id>.json`
 
-### 4. Live Stream & Object Detection (`stream_routes.py`, `stream.html`, `detect.py`)
-
+### Live Stream and Object Detection
 #### Initiating a Stream
 
 - Clicking "View Stream" navigates to `/stream/<cam_id>`
@@ -243,8 +237,7 @@ The journey begins with `app.py`. When you run this file, it:
     - Annotates and yields the frame as a JPEG
   - Flask streams this multipart response to the browser
 
-#### Real-time Detection & Zone Logic (`detect.py`, `zones.py`)
-
+#### Real-time Detection & Zone Logic
 - `VideoCamera.get_frame()`:
   - Uses `yolov8n.pt` with the Ultralytics API to detect objects in each frame
   - Filters for vehicle classes using a predefined `vehicle_class_ids` map
@@ -266,16 +259,13 @@ The journey begins with `app.py`. When you run this file, it:
 - `stream.html` polls `/get_stats/<cam_id>` via AJAX
 - The results are displayed in a "Stats Panel" next to the live video stream
 
-### 5. Utilities (`utils/` Files)
-
+### Utilities
 Throughout the process, the utility files play a crucial supporting role:
 
 * **`user_camera_utils.py`**: Manages the persistence of user accounts and their associated camera configurations (RTSP URLs, unique IDs) by interacting with `data/users.json` and `data/cameras.json`.
 * **`zones.py`**: Provides the essential logic for loading, saving, and performing point-in-polygon checks for the detection zones, which is fundamental to the zone-based analysis.
 
----
-
-## 📌 Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -289,8 +279,8 @@ Throughout the process, the utility files play a crucial supporting role:
 
 1.  **Clone the repository:**
     ```bash
-    git clone <repository_url>
-    cd <project_directory>
+    git clone https://github.com/Neelkanth-khithani/Vehicle-Analytics-RTSP.git
+    cd Vehicle-Analytics/RTSP
     ```
 
 2.  **Create a virtual environment (recommended):**
@@ -314,9 +304,7 @@ Throughout the process, the utility files play a crucial supporting role:
     ```
     The application will run on `http://0.0.0.0:5000/`.
 
----
-
-## 📌 Test RTSP Server Setup
+## Test RTSP Server Setup
 
 This setup allows you to create a simulated live RTSP stream from a video file (like `test1.mp4`) using `mediamtx` as the streaming server and FFmpeg to push the video to `mediamtx`.
 
@@ -324,7 +312,7 @@ This setup allows you to create a simulated live RTSP stream from a video file (
 * **FFmpeg**: A powerful open-source multimedia framework that can decode, encode, transcode, mux, demux, stream, filter, and play nearly anything that humans and machines have created. Here, it's used to read a local video file (`test1.mp4`) and re-stream it over RTSP to `mediamtx`.
 * **`test1.mp4`**: Your source video file that will be streamed.
 
-### 1. How to Run the Test RTSP Server
+### How to Run the Test RTSP Server
 
 To get this test server running, you'll need both `mediamtx` and FFmpeg.
 
@@ -362,7 +350,7 @@ To get this test server running, you'll need both `mediamtx` and FFmpeg.
 3.  **Verify the Stream:**
     You can use VLC media player or your Flask application to connect to the RTSP URL: `rtsp://ffmpeguser1:ffmpegpass1@localhost:8554/camera1`.
 
-### 2. How to Finetune the Test RTSP Server
+### How to Finetune the Test RTSP Server
 
 Finetuning primarily involves adjusting the FFmpeg command within the `runOnInit` section of your `server1.yml` (or `mediamtx.yml`). You can also adjust `mediamtx` server settings.
 
@@ -370,7 +358,6 @@ Finetuning primarily involves adjusting the FFmpeg command within the `runOnInit
 
 The FFmpeg command is:
 `ffmpeg -re -stream_loop -1 -i test1.mp4 -r 10 -c:v libx264 -preset medium -crf 34 -vf scale=1280:-2 -an -f rtsp -rtsp_transport tcp rtsp://ffmpeguser1:ffmpegpass1@localhost:8554/camera1`
-
 Here's how to finetune it:
 
 | Parameter | Description | How to Customize |
