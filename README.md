@@ -280,7 +280,7 @@ Throughout the process, the utility files play a crucial supporting role:
 1.  **Clone the repository:**
     ```bash
     git clone https://github.com/Neelkanth-khithani/Vehicle-Analytics-RTSP.git
-    cd Vehicle-Analytics/RTSP
+    cd Vehicle-Analytics-RTSP
     ```
 
 2.  **Create a virtual environment (recommended):**
