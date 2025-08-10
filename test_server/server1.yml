@@ -10,17 +10,4 @@ srtAddress: :8890
 
 paths:
   camera1:
-    runOnInit: ffmpeg -re -stream_loop -1 -i test1.mp4 -r 10 -c:v libx264 -preset medium -crf 34 -vf scale=1280:-2 -an -f rtsp -rtsp_transport tcp rtsp://ffmpeguser1:ffmpegpass1@localhost:8554/camera1 
-    # This `runOnInit` flag executes an FFmpeg command to stream `test1.mp4` as a live RTSP feed.
-    # - `-re`: Reads input at native frame rate (simulates live).
-    # - `-stream_loop -1`: Loops the input video indefinitely.
-    # - `-i test1.mp4`: Specifies `test1.mp4` as the input video.
-    # - `-r 10`: Sets output frame rate to 10 FPS.
-    # - `-c:v libx264`: Encodes video using H.264.
-    # - `-preset medium`: Balances encoding speed and quality for H.264.
-    # - `-crf 34`: Sets H.264 quality (higher value = more compression, lower quality).
-    # - `-vf scale=1280:-2`: Scales video to 1280 pixels wide, maintaining aspect ratio.
-    # - `-an`: Disables audio.
-    # - `-f rtsp`: Sets output format to RTSP.
-    # - `-rtsp_transport tcp`: Forces RTSP to use TCP for reliable transport.
-    # - `rtsp://ffmpeguser1:ffmpegpass1@localhost:8554/camera1`: The output RTSP URL with authentication.
+    runOnInit: ffmpeg -re -stream_loop -1 -i test1.mp4 -an -vf "scale=1920:1080" -r 25 -c:v libx264 -f rtsp -rtsp_transport tcp rtsp://ffmpeguser1:ffmpegpass1@localhost:8554/camera1
